@@ -8,7 +8,7 @@ import logging
 # Configure logging
 logging.basicConfig(filename='app_errors.log', level=logging.ERROR)
 
-st.title("CSV Data Chat Analyst")
+st.title("Biosphere 2 Real-Time Data Analysis")
 
 # Initialize session state
 if 'chat_history' not in st.session_state:
@@ -97,9 +97,4 @@ if st.session_state.loaded_data:
 elif folder_path:
     st.info("No valid CSV files found in the specified folder.")
 
-# Data preview section
-if st.session_state.loaded_data:
-    with st.expander("View Dataset Previews", expanded=False):
-        for name, df in st.session_state.loaded_data.items():
-            st.write(f"**{name}** (showing first 3 rows)")
-            st.dataframe(df.head(3))
+
