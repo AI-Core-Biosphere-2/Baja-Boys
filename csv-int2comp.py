@@ -4,115 +4,102 @@ import requests
 import json
 import os
 
-st.title("CSV Data Analyzer with Mistral AI")
+st.title("CSV Data Chat Analyst")
 
-# Folder path is hardcoded
+# Initialize session state for chat history and data
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+if 'loaded_data' not in st.session_state:
+    st.session_state.loaded_data = {}
+
+# Hardcoded folder path (modify as needed)
 folder_path = '/Users/connor/dev/hackArizona/Biosphere-Ocean-Data'
 
-# Function to send data to Ollama
-def query_mistral(prompt):
+def query_mistral(prompt, context):
+    system_prompt = f"""
+    You're a data analyst AI working with these datasets:
+    {context}
+    
+    Guidelines:
+    1. Answer questions based on the provided data
+    2. Reference specific columns and datasets when relevant
+    3. Highlight interesting patterns
+    4. Note data quality issues
+    5. Suggest visualizations where appropriate
+    6. Be concise but informative
+    """
+    
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",
             json={
                 "model": "mistral",
                 "prompt": prompt,
+                "system": system_prompt,
                 "stream": False
             }
         )
-        response_json = response.json()
-        if 'response' in response_json:
-            return response_json['response']
-        else:
-            raise ValueError(f"Invalid response from Mistral API: 'response' key not found. Full response: {response_json}")
+        return response.json().get('response', 'No response found')
     except Exception as e:
-        return f"Error querying Mistral API: {str(e)}"
+        return f"Error: {str(e)}"
 
-# Process files when folder is provided
-if folder_path:
+def create_data_context():
+    context = []
+    for filename, df in st.session_state.loaded_data.items():
+        context.append(f"""
+        Dataset: {filename}
+        - Columns: {', '.join(df.columns)}
+        - Row count: {len(df)}
+        - Sample values: {df.head(3).to_string(index=False)}
+        """)
+    return "\n".join(context)
+
+# Load CSV files on initial run
+if not st.session_state.loaded_data and folder_path:
     csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
-    if not csv_files:
-        st.warning("No CSV files found in the selected folder.")
-    else:
-        combined_info = []
-        for csv_file in csv_files:
+    for csv_file in csv_files:
+        try:
             file_path = os.path.join(folder_path, csv_file)
-            st.success(f"File '{csv_file}' successfully found!")
-            
-            # Read the CSV file using pandas
-            try:
-                df = pd.read_csv(file_path)
-            except Exception as e:
-                st.error(f"Error reading '{csv_file}': {str(e)}")
-                continue
-            
-            # Display file preview
-            st.subheader(f"Data Preview: {csv_file}")
-            st.write(df.head())
-            
-            # Display basic statistics
-            st.subheader(f"Basic Statistics: {csv_file}")
-            st.markdown(f"**Shape**: {df.shape[0]} rows, {df.shape[1]} columns")
-            st.markdown(f"**Columns**: {', '.join(df.columns.tolist())}")
-            
-            # Display summary statistics
-            try:
-                st.markdown("**Summary Statistics:**")
-                st.write(df.describe())
-            except Exception as e:
-                st.error(f"Error generating summary statistics for '{csv_file}': {str(e)}")
-            
-            # Information about the dataset to send to the model
-            info = {
-                "filename": csv_file,
-                "shape": df.shape,
-                "columns": df.columns.tolist(),
-                "data_types": {str(k): str(v) for k, v in df.dtypes.items()},
-                "head": df.head().to_dict(orient="records"),
-                "describe": df.describe().to_dict()
-            }
-            combined_info.append(info)
+            df = pd.read_csv(file_path)
+            st.session_state.loaded_data[csv_file] = df
+        except Exception as e:
+            st.error(f"Error loading {csv_file}: {str(e)}")
+
+# Display chat interface
+if st.session_state.loaded_data:
+    st.subheader("Chat with Your Data")
+    
+    # Display chat history
+    for entry in st.session_state.chat_history:
+        with st.chat_message(entry["role"]):
+            st.markdown(entry["content"])
+    
+    # Get user question
+    if prompt := st.chat_input("Ask about the data..."):
+        # Add user question to history
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
         
-        # Convert combined information to a string representation for the AI
-        combined_prompt = "Analyze the following CSV data and provide insights:\n\n"
-        for info in combined_info:
-            combined_prompt += f"""
-            Filename: {info['filename']}
-            Number of rows: {info['shape'][0]}
-            Number of columns: {info['shape'][1]}
-            
-            Column names: {', '.join(info['columns'])}
-            
-            Data types:
-            {json.dumps(info['data_types'], indent=2)}
-            
-            Sample data (first 5 rows):
-            {json.dumps(info['head'], indent=2)}
-            
-            Statistical summary:
-            {json.dumps(info['describe'], indent=2)}
-            
-            """
-        combined_prompt += """
-        Please provide:
-        1. A brief overview of what these datasets contain
-        2. Key observations about the data
-        3. Potential patterns or trends you notice
-        4. Suggestions for further analysis or visualization
-        5. Any data quality issues that should be addressed
-        """
+        # Create data context for the question
+        context = create_data_context()
         
-        # Show a spinner while waiting for the AI response
-        with st.spinner("Analyzing data from all CSV files with Mistral AI..."):
-            try:
-                analysis = query_mistral(combined_prompt)
-                
-                # Display the AI analysis
-                st.subheader("AI Analysis: Combined CSV Files")
-                st.markdown(analysis)
-                
-            except Exception as e:
-                st.error(f"Error querying Mistral AI: {str(e)}")
-                st.info("Make sure Ollama is running with the Mistral model loaded. Run 'ollama run mistral' in your terminal.")
+        # Generate response
+        with st.spinner("Analyzing..."):
+            response = query_mistral(
+                f"User question: {prompt}\n\nContext: {context}",
+                context
+            )
+        
+        # Add AI response to history
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
+        
+        # Rerun to update display
+        st.rerun()
 else:
-    st.info("Please enter the path to the folder containing CSV files to begin analysis.")
+    st.info("Loading data... Please wait" if folder_path else "No folder path configured")
+
+# Display raw data previews
+if st.session_state.loaded_data:
+    st.subheader("Loaded Datasets Preview")
+    for filename, df in st.session_state.loaded_data.items():
+        with st.expander(f"{filename} (shape: {df.shape})"):
+            st.dataframe(df.head(3))
