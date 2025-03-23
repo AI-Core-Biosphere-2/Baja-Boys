@@ -63,7 +63,7 @@ if not st.session_state.loaded_data and folder_path:
             df = pd.read_csv(file_path)
             st.session_state.loaded_data[csv_file] = df
         except Exception as e:
-            st.error(f"Error loading {csv_file}: {str(e)}")
+            pass  # Silently skip files with errors instead of showing them
 
 # Display chat interface
 if st.session_state.loaded_data:
