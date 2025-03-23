@@ -3,11 +3,7 @@
 Biosphere 2, a research facility dedicated to understanding Earth's intricate and intelligent ecosystems, has inspired our project to create a digital twin using Artificial Intelligence and Machine Learning. Our goal is to innovate ways to restore degraded environments on Earth and prepare for space travel.
 
 ## Project Overview
-Our project, built using Streamlit and AI models, provides a user-friendly interface to select between different datasets:
-* Rainforest
-* Outdoor
-* General
-* Ocean
+Our project, built using Streamlit and AI models, provides a user-friendly interface that works with the Ocean dataset:
 
 The color of these buttons indicates whether all data is within tolerance for these datasets. The main menu features a chatbot that summarizes the status of the three datasets and refreshes the data periodically.
 
