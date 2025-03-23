@@ -1,10 +1,14 @@
+#Author: Connor Larson
+
 #imports and variables from utils file
 from utils import *
 
+#scrapes the Ocean Scada Data
 def scrape_the_scada():
     # Set up the WebDriver
     driver = get_driver()
 
+    #there are options in the dropdown, this gets them all
     for index in range(25):
         try:
             print("downloading index "+str(index))
@@ -23,6 +27,7 @@ def scrape_the_scada():
             time.sleep(3)  # Wait for login to complete
             print("step 2\n")
             
+            #step 3
             #select all variables
             wait = WebDriverWait(driver, 10)  # Wait for a maximum of 10 seconds
             print("lookin\n")
@@ -32,24 +37,24 @@ def scrape_the_scada():
             for option in select.options:
                 select.select_by_index(index)
             
-            # Step 5: Click the "Get Data" button
+            # Step 4: Click the "Get Data" button
             get_data_button = driver.find_element(By.XPATH, "//input[@value='Get Data']")
             get_data_button.click()
             time.sleep(2)
             print("step 5\n")
-            # Step 6: Switch to the popup window
+            # Step 5: Switch to the popup window
             main_window = driver.current_window_handle  # Store main window handle
             for handle in driver.window_handles:
                 if handle != main_window:
                     driver.switch_to.window(handle)  # Switch to popup window
                     break
             print("step 6\n")
-            # Step 7: Locate and download the CSV file (adjust selector as needed)
+            # Step 6: Locate and download the CSV file
             csv_link = wait.until(EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, ".csv")))
             csv_link.click()
             print("CSV file download initiated. " +str(csv_link))
 
-            # Step 8: Switch back to the main window (if needed)
+            # Step 7: Switch back to the main window (if needed)
             driver.switch_to.window(main_window)
 
         except Exception as e:

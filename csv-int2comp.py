@@ -1,9 +1,12 @@
+#Author: Jack Tanner & Nickolas Escalante
+
 import streamlit as st
 import pandas as pd
 import requests
 import json
 import os
 
+#Sets app title
 st.title("Biosphere 2 Acquired Data Analysis")
 
 # Initialize session state for chat history and data
@@ -15,6 +18,9 @@ if 'loaded_data' not in st.session_state:
 # Hardcoded folder path (modify as needed)
 folder_path = '/Users/connor/dev/hackArizona/Biosphere-Ocean-Data'
 
+#queries the ai
+#you can edit this area to tune the information recieved from mistral 
+
 def query_mistral(prompt, context):
     system_prompt = f"""
     You're a data analyst AI working with these datasets:
@@ -22,11 +28,8 @@ def query_mistral(prompt, context):
     
     Guidelines:
     1. Answer questions based on the provided data
-    2. Reference specific columns and datasets when relevant
-    3. Highlight interesting patterns
-    4. Note data quality issues
-    5. Suggest visualizations where appropriate
-    6. Be concise but informative
+    2. Highlight interesting patterns
+    3. Be concise but informative
     """
     
     try:
@@ -63,7 +66,7 @@ if not st.session_state.loaded_data and folder_path:
             df = pd.read_csv(file_path)
             st.session_state.loaded_data[csv_file] = df
         except Exception as e:
-            pass  # Silently skip files with errors instead of showing them
+            pass  
 
 # Display chat interface
 if st.session_state.loaded_data:
