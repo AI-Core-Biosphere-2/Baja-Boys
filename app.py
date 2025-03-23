@@ -11,19 +11,22 @@ folder_path = st.text_input("Enter the path to the folder containing CSV files")
 
 # Function to send data to Ollama
 def query_mistral(prompt):
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "mistral",
-            "prompt": prompt,
-            "stream": False
-        }
-    )
-    response_json = response.json()
-    if 'response' in response_json:
-        return response_json['response']
-    else:
-        raise ValueError(f"Invalid response from Mistral API: 'response' key not found. Full response: {response_json}")
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "mistral",
+                "prompt": prompt,
+                "stream": False
+            }
+        )
+        response_json = response.json()
+        if 'response' in response_json:
+            return response_json['response']
+        else:
+            raise ValueError(f"Invalid response from Mistral API: 'response' key not found. Full response: {response_json}")
+    except Exception as e:
+        return f"Error querying Mistral API: {str(e)}"
 
 # Process each file when folder is provided
 if folder_path:
@@ -36,27 +39,27 @@ if folder_path:
             st.success(f"File '{csv_file}' successfully found!")
             
             # Read the CSV file
-            df = pd.read_csv(file_path)
+            try:
+                df = pd.read_csv(file_path)
+            except Exception as e:
+                st.error(f"Error reading '{csv_file}': {str(e)}")
+                continue
             
-            # Display file preview without using st.write for DataFrames
+            # Display file preview
             st.subheader(f"Data Preview: {csv_file}")
+            st.write(df.head())
             
-            # Convert DataFrame to HTML and display that instead
-            # This avoids the pyarrow dependency issue
-            st.markdown(df.head().to_html(), unsafe_allow_html=True)
-            
-            # Display basic statistics as text/markdown
+            # Display basic statistics
             st.subheader(f"Basic Statistics: {csv_file}")
             st.markdown(f"**Shape**: {df.shape[0]} rows, {df.shape[1]} columns")
             st.markdown(f"**Columns**: {', '.join(df.columns.tolist())}")
             
-            # Convert describe() to markdown
+            # Display summary statistics
             try:
-                from tabulate import tabulate
                 st.markdown("**Summary Statistics:**")
-                st.markdown(df.describe().to_markdown())
-            except ImportError:
-                st.error("Missing optional dependency 'tabulate'. Use pip or conda to install tabulate.")
+                st.write(df.describe())
+            except Exception as e:
+                st.error(f"Error generating summary statistics for '{csv_file}': {str(e)}")
             
             # Information about the dataset to send to the model
             info = {
@@ -64,8 +67,7 @@ if folder_path:
                 "shape": df.shape,
                 "columns": df.columns.tolist(),
                 "data_types": {str(k): str(v) for k, v in df.dtypes.items()},
-                "head": df.head().values.tolist(),
-                "column_names": df.columns.tolist(),
+                "head": df.head().to_dict(orient="records"),
                 "describe": df.describe().to_dict()
             }
             
