@@ -96,10 +96,3 @@ if st.session_state.loaded_data:
         st.rerun()
 else:
     st.info("Loading data... Please wait" if folder_path else "No folder path configured")
-
-# Display raw data previews
-if st.session_state.loaded_data:
-    st.subheader("Loaded Datasets Preview")
-    for filename, df in st.session_state.loaded_data.items():
-        with st.expander(f"{filename} (shape: {df.shape})"):
-            st.dataframe(df.head(3))
