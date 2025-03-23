@@ -40,14 +40,3 @@ Our ultimate goal is to connect to the comprehensive Biosphere 2 data archive an
 * Stage 2: Grab starter data from GitHub and learn to make them usable by LLM
 * Stage 3: Connect to comprehensive data archive for access to all data and do something useful with it
 * Stage 4: Get LLMs to talk to each other and work together to do science
-
-## Contributing
-We welcome contributions to our project! Please fork the repository, make changes, and submit a pull request.
-
-## Acknowledgments
-* AI Core Team for providing access to AI models and resources
-* Biosphere 2 for providing the sensor data and inspiration for our project
-* Streamlit for providing the UI library
-
-## License
-Our project is licensed under the MIT License.
