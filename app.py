@@ -6,8 +6,8 @@ import os
 
 st.title("CSV Data Analyzer with Mistral AI")
 
-# Folder uploader widget
-folder_path = st.text_input("Enter the path to the folder containing CSV files")
+# Folder path input
+folder_path = st.text_input('/Users/connor/dev/hackArizona/Biosphere-Ocean-Data')
 
 # Function to send data to Ollama
 def query_mistral(prompt):
@@ -28,7 +28,7 @@ def query_mistral(prompt):
     except Exception as e:
         return f"Error querying Mistral API: {str(e)}"
 
-# Process each file when folder is provided
+# Process files when folder is provided
 if folder_path:
     csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
     if not csv_files:
@@ -38,7 +38,7 @@ if folder_path:
             file_path = os.path.join(folder_path, csv_file)
             st.success(f"File '{csv_file}' successfully found!")
             
-            # Read the CSV file
+            # Read the CSV file using pandas
             try:
                 df = pd.read_csv(file_path)
             except Exception as e:
