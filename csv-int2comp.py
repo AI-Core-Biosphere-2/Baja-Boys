@@ -4,7 +4,7 @@ import requests
 import json
 import os
 
-st.title("CSV Data Chat Analyst")
+st.title("Biosphere 2 Acquired Data Analysis")
 
 # Initialize session state for chat history and data
 if 'chat_history' not in st.session_state:
