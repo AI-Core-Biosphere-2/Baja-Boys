@@ -83,7 +83,7 @@ if st.session_state.loaded_data:
         context = create_data_context()
         
         # Generate response
-        with st.spinner("Analyzing..."):
+        with st.spinner("Thinking hard..."):
             response = query_mistral(
                 f"User question: {prompt}\n\nContext: {context}",
                 context
